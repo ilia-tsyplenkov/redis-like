@@ -72,7 +72,7 @@ func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
 		if err != nil {
 			return "", err
 		} else {
-			return fmt.Sprintf("%v", res)
+			return fmt.Sprintf("%v", res), nil
 		}
 	case "hset", "HSET":
 		dict, err := MapParser(data)
