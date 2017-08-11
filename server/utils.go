@@ -1,12 +1,22 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 )
 
+var fewArgsErr = errors.New("not enough arguments")
+var missValueErr = errors.New("value is missed")
+var manyArgsErr = errors.New("too many arguments")
+var keyNotSpecifiedErr = errors.New("key is not specified")
+var unknownCmdErr = errors.New("unknown command")
+
 func MapParser(sl []string) (map[string]string, error) {
 	if len(sl) < 2 {
-		return nil, fmt.Errorf("not enough argumets")
+		return nil, fewArgsErr
+	}
+	if len(sl)%2 != 0 {
+		return nil, missValueErr
 	}
 	res := make(map[string]string)
 	for i := 0; i < len(sl); i += 2 {
@@ -17,7 +27,7 @@ func MapParser(sl []string) (map[string]string, error) {
 
 func ParamsParser(sl []string) (key string, value []string, err error) {
 	if len(sl) < 1 {
-		err = fmt.Errorf("key is not specified")
+		err = keyNotSpecifiedErr
 		return key, value, err
 	}
 	return sl[0], sl[1:], nil
@@ -31,10 +41,10 @@ func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
 	switch cmd {
 	case "set", "SET":
 		if len(data) == 0 {
-			return "", fmt.Errorf("not enough arguments for this command")
+			return "", fewArgsErr
 		}
 		if len(data) > 1 {
-			return "", fmt.Errorf("too many arguments for this command")
+			return "", manyArgsErr
 		}
 		err := dm.Set(key, data[0])
 		if err != nil {
@@ -45,7 +55,7 @@ func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
 
 	case "get", "GET":
 		if len(data) > 0 {
-			return "", fmt.Errorf("too many arguments for this command")
+			return "", manyArgsErr
 		}
 		res, err := dm.Get(key)
 		if err != nil {
@@ -56,7 +66,7 @@ func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
 
 	case "lset", "LSET":
 		if len(data) < 1 {
-			return "", fmt.Errorf("not enough arguments")
+			return "", fewArgsErr
 		}
 		err := dm.LSet(key, data)
 		if err != nil {
@@ -66,7 +76,7 @@ func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
 		}
 	case "lget", "LGET":
 		if len(data) > 0 {
-			return "", fmt.Errorf("too many arguments")
+			return "", manyArgsErr
 		}
 		res, err := dm.LGet(key)
 		if err != nil {
@@ -87,7 +97,7 @@ func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
 		}
 	case "hget", "HGET":
 		if len(data) > 0 {
-			return "", fmt.Errorf("too many arguments")
+			return "", manyArgsErr
 		}
 		dict, err := dm.HGet(key)
 		if err != nil {
@@ -95,6 +105,8 @@ func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return fmt.Sprintf("%v", dict), nil
 		}
+	default:
+		return "", unknownCmdErr
 	}
 	return "", fmt.Errorf("unhandled error")
 }

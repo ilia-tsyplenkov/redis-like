@@ -1,9 +1,11 @@
 package server
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 )
+
+var keyNotExistErr = errors.New("key not exists")
 
 type DataMap struct {
 	mu   sync.RWMutex
@@ -28,7 +30,7 @@ func (d *DataMap) Get(key string) (string, error) {
 	val, ok := d.hash[key]
 	d.mu.RUnlock()
 	if !ok {
-		return "", fmt.Errorf("%q key not exists", key)
+		return "", keyNotExistErr
 	}
 	return val.SGet()
 }
@@ -47,7 +49,7 @@ func (d *DataMap) LGet(key string) ([]string, error) {
 	val, ok := d.hash[key]
 	d.mu.RUnlock()
 	if !ok {
-		return nil, fmt.Errorf("%q key not exists", key)
+		return nil, keyNotExistErr
 	}
 	return val.LGet()
 }
@@ -66,7 +68,7 @@ func (d *DataMap) HGet(key string) (map[string]string, error) {
 	val, ok := d.hash[key]
 	d.mu.RUnlock()
 	if !ok {
-		return nil, fmt.Errorf("%q key not exists", key)
+		return nil, keyNotExistErr
 	}
 	return val.HGet()
 }
