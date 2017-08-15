@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestMapSet(t *testing.T) {
@@ -21,8 +22,8 @@ func TestMapSet(t *testing.T) {
 	mapVal := map[string]string{"hello": "world"}
 	data.hash[key] = &Data{Value: mapVal}
 	err = data.Set(key, want)
-	if err == nil {
-		t.Errorf("Set for another type returns nil error")
+	if err != typeMismatchErr {
+		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 }
 
@@ -40,15 +41,15 @@ func TestMapGet(t *testing.T) {
 		t.Fatalf("Get(%s) = %v, want: %v", key, got, want)
 	}
 	got, err = data.Get("foo")
-	if err == nil {
-		t.Fatalf("Get for non-existing key returns nil error")
+	if err != keyNotExistErr {
+		t.Fatalf("got '%v', expected '%v' error", err, keyNotExistErr)
 	}
 
 	listKey := "list"
 	data.hash[listKey] = &Data{Value: []string{"hello", "world"}}
 	got, err = data.Get(listKey)
-	if err == nil {
-		t.Errorf("Get for another type returns nil error")
+	if err != typeMismatchErr {
+		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 
 }
@@ -69,8 +70,8 @@ func TestMapLSet(t *testing.T) {
 	mapVal := map[string]string{"hello": "world"}
 	data.hash[key] = &Data{Value: mapVal}
 	err = data.LSet(key, have)
-	if err == nil {
-		t.Errorf("LSet for another type returns nil error")
+	if err != typeMismatchErr {
+		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 }
 
@@ -89,8 +90,8 @@ func TestMapLGet(t *testing.T) {
 	}
 	skey := "str"
 	dm.hash[skey] = &Data{Value: "string"}
-	if _, err = dm.LGet(skey); err == nil {
-		t.Errorf("LGet for another type returns nil error")
+	if _, err = dm.LGet(skey); err != typeMismatchErr {
+		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 }
 
@@ -108,8 +109,67 @@ func TestMapHSet(t *testing.T) {
 	}
 	lst := []string{"hello", "world"}
 	dm.hash[key] = &Data{Value: lst}
-	if err := dm.HSet(key, have); err == nil {
-		t.Errorf("HSet fot another type returns nil error")
+	if err := dm.HSet(key, have); err != typeMismatchErr {
+		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 
+}
+
+func TestMapExpire(t *testing.T) {
+	key := "test"
+	var dm DataMap
+	dm.Init()
+	dm.hash[key] = &Data{}
+	if err := dm.Expire(key, 0); err == nil {
+		t.Error("ttl duration must be positive")
+	}
+	if err := dm.Expire("i'm groot", 10); err != keyNotExistErr {
+		t.Errorf("got '%v', want '%v' error", err, keyNotExistErr)
+	}
+	if err := dm.Expire(key, 1); err != nil {
+		t.Fatalf("got '%v', expected 'nil' error", err)
+	}
+}
+
+func TestMapExpireat(t *testing.T) {
+	key := "test"
+	var dm DataMap
+	dm.Init()
+	dm.hash[key] = &Data{}
+	if err := dm.Expireat(key, time.Now().UTC().Unix()); err == nil {
+		t.Error("ttl should be in the future")
+	}
+	if err := dm.Expireat("i'm groot", time.Now().UTC().Unix()+10); err != keyNotExistErr {
+		t.Errorf("got '%v', want '%v' error", err, keyNotExistErr)
+	}
+	if err := dm.Expireat(key, time.Now().UTC().Unix()+10); err != nil {
+		t.Errorf("got '%v', expected 'nil' error", err)
+	}
+
+}
+
+func TestMapTTL(t *testing.T) {
+	key := "test"
+	var dm DataMap
+	dm.Init()
+	dm.hash[key] = &Data{}
+	if _, err := dm.TTL("i'm groot"); err != keyNotExistErr {
+		t.Errorf("got '%v', want '%v' error", err, keyNotExistErr)
+	}
+	ttl, err := dm.TTL(key)
+	if err != nil {
+		t.Errorf("got '%v' error, expected 'nil' error", err)
+	}
+	if ttl != "-1" {
+		t.Errorf("got '%s' ttl, expected '-1' ttl with no expire", ttl)
+	}
+	want := int64(100)
+	dm.hash[key] = &Data{ttl: want}
+	ttl, err = dm.TTL(key)
+	if err != nil {
+		t.Errorf("got '%v' error, expected 'nil' error", err)
+	}
+	if ttl != string(want) {
+		t.Errorf("got '%s' ttl, expected '%d' ttl", ttl, want)
+	}
 }

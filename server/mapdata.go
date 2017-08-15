@@ -2,7 +2,9 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"sync"
+	"time"
 )
 
 var keyNotExistErr = errors.New("key not exists")
@@ -81,4 +83,59 @@ func (d *DataMap) Keys() []string {
 		keys = append(keys, key)
 	}
 	return keys
+}
+
+func (dm *DataMap) Expire(key string, dur int64) error {
+	if dur <= 0 {
+		return fmt.Errorf("ERROR: wrong duration for ttl")
+	}
+	ttl := time.Now().UTC().Unix() + dur
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	data, ok := dm.hash[key]
+	if !ok {
+		return keyNotExistErr
+	}
+	data.SetTTL(ttl)
+	return nil
+}
+
+func (dm *DataMap) Expireat(key string, ttl int64) error {
+	if ttl <= time.Now().UTC().Unix() {
+		return fmt.Errorf("ERROR: ttl must be greater than now")
+	}
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	data, ok := dm.hash[key]
+	if !ok {
+		return keyNotExistErr
+	}
+	data.SetTTL(ttl)
+	return nil
+}
+
+func (dm *DataMap) Persist(key string) error {
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	data, ok := dm.hash[key]
+	if !ok {
+		return keyNotExistErr
+	}
+	data.SetTTL(0)
+	return nil
+
+}
+
+func (dm *DataMap) TTL(key string) (string, error) {
+	dm.mu.RLock()
+	data, ok := dm.hash[key]
+	dm.mu.RUnlock()
+	if !ok {
+		return "", keyNotExistErr
+	}
+	ttl := data.TTL()
+	if ttl > 0 {
+		return string(ttl), nil
+	}
+	return "-1", nil
 }
