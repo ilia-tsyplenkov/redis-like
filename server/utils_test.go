@@ -58,70 +58,101 @@ func TestParamsParser(t *testing.T) {
 
 }
 
-func TestWrongCommandHandler(t *testing.T) {
+func TestWrongDataHandler(t *testing.T) {
 	var dm DataMap
 	cmd := "I am Groot"
-	if _, err := CommandHandler(dm, cmd, []string{"key"}); err != unknownCmdErr {
+	if _, err := DataHandler(dm, cmd, []string{"key"}); err != unknownCmdErr {
 		t.Errorf("got '%v', want: '%v'", err, unknownCmdErr)
 	}
 }
 
-func TestSetCommandHandler(t *testing.T) {
+func TestSetDataHandler(t *testing.T) {
 	var dm DataMap
 	cmd := "set"
 	dm.Init()
-	if _, err := CommandHandler(dm, cmd, []string{"key"}); err != fewArgsErr {
+	if _, err := DataHandler(dm, cmd, []string{"key"}); err != fewArgsErr {
 		t.Errorf("got '%v', want: '%v'", err, fewArgsErr)
 	}
-	if _, err := CommandHandler(dm, cmd, []string{"key", "hello", "world"}); err != manyArgsErr {
+	if _, err := DataHandler(dm, cmd, []string{"key", "hello", "world"}); err != manyArgsErr {
 		t.Errorf("got '%v', want: '%v'", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &Data{Value: ""}
-	if _, err := CommandHandler(dm, cmd, []string{key, "hello"}); err != nil {
+	if _, err := DataHandler(dm, cmd, []string{key, "hello"}); err != nil {
 		t.Errorf("got '%v', expected 'nil'", err)
 	}
 
 }
 
-func TestGetCommnadHandler(t *testing.T) {
+func TestGetDataHandler(t *testing.T) {
 	var dm DataMap
 	cmd := "get"
 	dm.Init()
-	if _, err := CommandHandler(dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
+	if _, err := DataHandler(dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
 		t.Errorf("got '%v', want: '%v'", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &Data{Value: "hello"}
-	if _, err := CommandHandler(dm, cmd, []string{key}); err != nil {
+	if _, err := DataHandler(dm, cmd, []string{key}); err != nil {
 		t.Errorf("got '%v', expected 'nil'", err)
 	}
 }
 
-func TestLSetCommandHandler(t *testing.T) {
+func TestLSetDataHandler(t *testing.T) {
 	var dm DataMap
 	cmd := "lset"
 	dm.Init()
-	if _, err := CommandHandler(dm, cmd, []string{"key"}); err != fewArgsErr {
+	if _, err := DataHandler(dm, cmd, []string{"key"}); err != fewArgsErr {
 		t.Errorf("got '%v', want '%v'", err, fewArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &Data{Value: []string{}}
-	if _, err := CommandHandler(dm, cmd, []string{key, "hello", "world"}); err != nil {
+	if _, err := DataHandler(dm, cmd, []string{key, "hello", "world"}); err != nil {
 		t.Errorf("got '%v', expected 'nil' error", err)
 	}
 }
 
-func TestLGetCommandHandler(t *testing.T) {
+func TestLGetDataHandler(t *testing.T) {
 	var dm DataMap
 	dm.Init()
 	cmd := "lget"
-	if _, err := CommandHandler(dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
+	if _, err := DataHandler(dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
 		t.Errorf("got '%v', expected '%v' error", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &Data{Value: []string{"hello", "world"}}
-	if _, err := CommandHandler(dm, cmd, []string{key}); err != nil {
+	if _, err := DataHandler(dm, cmd, []string{key}); err != nil {
+		t.Errorf("got '%v', expected 'nil' error", err)
+	}
+}
+
+func TestHSetDataHandler(t *testing.T) {
+	var dm DataMap
+	cmd := "hset"
+	dm.Init()
+	if _, err := DataHandler(dm, cmd, []string{"key", "hello"}); err != fewArgsErr {
+		t.Errorf("got '%v', want '%v'", err, fewArgsErr)
+	}
+	if _, err := DataHandler(dm, cmd, []string{"key", "one", "two", "three"}); err != missValueErr {
+		t.Errorf("got '%v', want '%v'", err, missValueErr)
+	}
+	key := "test"
+	dm.hash[key] = &Data{Value: map[string]string{}}
+	if _, err := DataHandler(dm, cmd, []string{key, "key", "value"}); err != nil {
+		t.Errorf("got '%v', expected 'nil' error", err)
+	}
+}
+
+func TestHGetDataHandler(t *testing.T) {
+	var dm DataMap
+	dm.Init()
+	cmd := "hget"
+	if _, err := DataHandler(dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
+		t.Errorf("got '%v', expected '%v' error", err, manyArgsErr)
+	}
+	key := "test"
+	dm.hash[key] = &Data{Value: map[string]string{"key": "value"}}
+	if _, err := DataHandler(dm, cmd, []string{key}); err != nil {
 		t.Errorf("got '%v', expected 'nil' error", err)
 	}
 }

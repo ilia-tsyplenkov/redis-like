@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"regexp"
 )
 
 var fewArgsErr = errors.New("not enough arguments")
@@ -10,6 +11,19 @@ var missValueErr = errors.New("value is missed")
 var manyArgsErr = errors.New("too many arguments")
 var keyNotSpecifiedErr = errors.New("key is not specified")
 var unknownCmdErr = errors.New("unknown command")
+
+func dataParser(s string) []string {
+	// var res []string
+	// splitted := strings.Split(s, " ")
+	// for _, item := range splitted {
+	// 	if item != "" {
+	// 		res = append(res, item)
+	// 	}
+	// }
+	// return res
+	r := regexp.MustCompile("\".+?\"|\\S+")
+	return r.FindAllString(s, -1)
+}
 
 func MapParser(sl []string) (map[string]string, error) {
 	if len(sl) < 2 {
@@ -33,8 +47,21 @@ func ParamsParser(sl []string) (key string, value []string, err error) {
 	return sl[0], sl[1:], nil
 }
 
-func CommandHandler(dm DataMap, cmd string, s []string) (string, error) {
+func CommandHandler(s string) (cmd string, data []string, err error) {
+	if len(s) == 0 {
+		return cmd, data, fmt.Errorf("no command provided")
+	}
+	parsed := dataParser(s)
+	return parsed[0], parsed[1:], nil
+}
+
+func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
+	switch cmd {
+	case "keys", "KEYS":
+		return fmt.Sprintf("%v", dm.Keys()), nil
+	}
 	key, data, err := ParamsParser(s)
+	//log.Printf("ParamsParser key: %s, data: %s, len: %d, err: %s\n", key, data, len(data), err)
 	if err != nil {
 		return "", err
 	}

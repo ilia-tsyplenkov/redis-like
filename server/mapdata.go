@@ -72,3 +72,13 @@ func (d *DataMap) HGet(key string) (map[string]string, error) {
 	}
 	return val.HGet()
 }
+
+func (d *DataMap) Keys() []string {
+	var keys []string
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	for key := range d.hash {
+		keys = append(keys, key)
+	}
+	return keys
+}
