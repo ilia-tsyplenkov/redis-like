@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-var keyNotExistErr = errors.New("key not exists")
-var invalidIndexErr = errors.New("invalid list index")
-var invalidInnerKeyErr = errors.New("invalid inner key")
+var keyNotExistErr = errors.New("ERROR: key not exists")
+var invalidIndexErr = errors.New("ERROR: invalid list index")
+var invalidInnerKeyErr = errors.New("ERROR: invalid inner key")
 
 type DataMap struct {
 	mu   sync.RWMutex
@@ -70,6 +70,18 @@ func (dm *DataMap) LGetIt(key string, index int) (string, error) {
 
 }
 
+func (dm *DataMap) LUpdate(key string, index int, value string) error {
+	s, err := dm.LGet(key)
+	if err != nil {
+		return err
+	}
+	if index < 0 || index >= len(s) {
+		return invalidIndexErr
+	}
+	s[index] = value
+	return nil
+}
+
 func (d *DataMap) HSet(key string, val map[string]string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -99,6 +111,15 @@ func (dm *DataMap) HGetVal(outerKey, innerKey string) (string, error) {
 		return "", invalidInnerKeyErr
 	}
 	return val, nil
+}
+
+func (dm *DataMap) HUpdate(outKey, inKey, value string) error {
+	dict, err := dm.HGet(outKey)
+	if err != nil {
+		return err
+	}
+	dict[inKey] = value
+	return nil
 }
 
 func (dm *DataMap) Keys() []string {

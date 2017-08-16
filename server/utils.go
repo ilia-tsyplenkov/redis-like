@@ -7,12 +7,12 @@ import (
 	"strconv"
 )
 
-var fewArgsErr = errors.New("not enough arguments")
-var missValueErr = errors.New("value is missed")
-var manyArgsErr = errors.New("too many arguments")
-var keyNotSpecifiedErr = errors.New("key is not specified")
-var unknownCmdErr = errors.New("unknown command")
-var wrongArgErr = errors.New("wrong argument type")
+var fewArgsErr = errors.New("ERROR: not enough arguments")
+var missValueErr = errors.New("ERROR: value is missed")
+var manyArgsErr = errors.New("ERROR: too many arguments")
+var keyNotSpecifiedErr = errors.New("ERROR: key is not specified")
+var unknownCmdErr = errors.New("ERROR: unknown command")
+var wrongArgErr = errors.New("ERROR: wrong argument type")
 
 func dataParser(s string) []string {
 	// var res []string
@@ -113,6 +113,23 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return fmt.Sprintf("%v", res), nil
 		}
+	case "lgetit":
+		if len(data) == 0 {
+			return "", fewArgsErr
+		}
+		if len(data) > 1 {
+			return "", manyArgsErr
+		}
+		index, err := strconv.Atoi(data[0])
+		if err != nil {
+			return "", err
+		}
+		res, err := dm.LGetIt(key, index)
+		if err != nil {
+			return "", err
+		} else {
+			return res, nil
+		}
 	case "hset":
 		dict, err := MapParser(data)
 		if err != nil {
@@ -133,6 +150,19 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 			return "", err
 		} else {
 			return fmt.Sprintf("%v", dict), nil
+		}
+	case "hgetval":
+		if len(data) == 0 {
+			return "", fewArgsErr
+		}
+		if len(data) > 1 {
+			return "", manyArgsErr
+		}
+		res, err := dm.HGetVal(key, data[0])
+		if err != nil {
+			return "", err
+		} else {
+			return res, nil
 		}
 	case "ttl":
 		if len(data) > 0 {

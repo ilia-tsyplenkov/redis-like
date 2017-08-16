@@ -117,6 +117,27 @@ func TestMapLGetIt(t *testing.T) {
 	}
 }
 
+func TestMapLUpate(t *testing.T) {
+	var dm DataMap
+	dm.Init()
+	key := "test"
+	want := []string{"ten", "two"}
+	dm.hash[key] = &Data{Value: []string{"one", "two"}}
+	if err := dm.LUpdate("i'm groot", 0, "ten"); err != keyNotExistErr {
+		t.Fatalf("got '%v', want '%v' error for non existing key", err, keyNotExistErr)
+	}
+	if err := dm.LUpdate(key, -1, want[0]); err != invalidIndexErr {
+		t.Fatalf("got '%v', want '%v' error for invalid index", err, invalidIndexErr)
+	}
+	if err := dm.LUpdate(key, 0, want[0]); err != nil {
+		t.Fatalf("got '%v', want 'nil' error for valid case", err)
+	}
+	got, _ := dm.LGet(key)
+	if fmt.Sprintf("%v", got) != fmt.Sprintf("%v", want) {
+		t.Fatalf("got '%v', want '%v'", got, want)
+	}
+}
+
 func TestMapHGet(t *testing.T) {
 	key := "test"
 	have := map[string]string{"hello": "world"}
@@ -153,6 +174,23 @@ func TestMapHGetVal(t *testing.T) {
 	}
 	if got != have["hello"] {
 		t.Fatalf("got %q, want %q", got, have["hello"])
+	}
+}
+
+func TestMapHUpdate(t *testing.T) {
+	key := "test"
+	var dm DataMap
+	dm.Init()
+	dm.hash[key] = &Data{Value: map[string]string{"hello": "world"}}
+	if err := dm.HUpdate("i'm groot", "hello", "bye"); err != keyNotExistErr {
+		t.Fatalf("got '%v', want '%v' error for non-existing key", err, keyNotExistErr)
+	}
+	if err := dm.HUpdate(key, "hello", "bye"); err != nil {
+		t.Fatalf("got '%v', want 'nil' error for valid case", err)
+	}
+	got, _ := dm.HGetVal(key, "hello")
+	if got != "bye" {
+		t.Fatalf("got '%s', want 'bye'", got)
 	}
 }
 
