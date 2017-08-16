@@ -16,48 +16,63 @@ type DataMap struct {
 	hash map[string]*Data
 }
 
-func (d *DataMap) Init() {
-	d.hash = make(map[string]*Data)
+// Init initializes hash map in dm.
+func (dm *DataMap) Init() {
+	dm.hash = make(map[string]*Data)
 }
 
-func (d *DataMap) Set(key, val string) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	if _, ok := d.hash[key]; !ok {
-		d.hash[key] = new(Data)
+// Set sets string in dm by key.
+// Returns error if key contains another type.
+func (dm *DataMap) Set(key, val string) error {
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	if _, ok := dm.hash[key]; !ok {
+		dm.hash[key] = new(Data)
 	}
-	return d.hash[key].SSet(val)
+	return dm.hash[key].SSet(val)
 }
 
-func (d *DataMap) Get(key string) (string, error) {
-	d.mu.RLock()
-	val, ok := d.hash[key]
-	d.mu.RUnlock()
+// Get gets string from dm by key.
+// Returns error if key not exists or
+// contains another type.
+func (dm *DataMap) Get(key string) (string, error) {
+	dm.mu.RLock()
+	val, ok := dm.hash[key]
+	dm.mu.RUnlock()
 	if !ok {
 		return "", keyNotExistErr
 	}
 	return val.SGet()
 }
 
-func (d *DataMap) LSet(key string, val []string) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	if _, ok := d.hash[key]; !ok {
-		d.hash[key] = new(Data)
+// LSet sets list to dm by key.
+// Returns error if key contains another type.
+func (dm *DataMap) LSet(key string, val []string) error {
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	if _, ok := dm.hash[key]; !ok {
+		dm.hash[key] = new(Data)
 	}
-	return d.hash[key].LSet(val)
+	return dm.hash[key].LSet(val)
 }
 
-func (d *DataMap) LGet(key string) ([]string, error) {
-	d.mu.RLock()
-	val, ok := d.hash[key]
-	d.mu.RUnlock()
+// LGet gets slice from dm by key.
+// Returns error if key not exists or
+// contains another type.
+func (dm *DataMap) LGet(key string) ([]string, error) {
+	dm.mu.RLock()
+	val, ok := dm.hash[key]
+	dm.mu.RUnlock()
 	if !ok {
 		return nil, keyNotExistErr
 	}
 	return val.LGet()
 }
 
+// LGetIt gets slice from dm by key and
+// get item from slice by index.
+// Returns error if key or index is invalid
+// and if key contains another type
 func (dm *DataMap) LGetIt(key string, index int) (string, error) {
 	s, err := dm.LGet(key)
 	if err != nil {
@@ -70,6 +85,10 @@ func (dm *DataMap) LGetIt(key string, index int) (string, error) {
 
 }
 
+// LUpdate updates slice in dm by key.
+// It changes data by index to value.
+// Returns error if key or index is invalid
+// and if key contains another type.
 func (dm *DataMap) LUpdate(key string, index int, value string) error {
 	s, err := dm.LGet(key)
 	if err != nil {
@@ -82,25 +101,36 @@ func (dm *DataMap) LUpdate(key string, index int, value string) error {
 	return nil
 }
 
-func (d *DataMap) HSet(key string, val map[string]string) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	if _, ok := d.hash[key]; !ok {
-		d.hash[key] = new(Data)
+// HSet sets map to dm by key.
+// Returns error if key contains
+// another type.
+func (dm *DataMap) HSet(key string, val map[string]string) error {
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	if _, ok := dm.hash[key]; !ok {
+		dm.hash[key] = new(Data)
 	}
-	return d.hash[key].HSet(val)
+	return dm.hash[key].HSet(val)
 }
 
-func (d *DataMap) HGet(key string) (map[string]string, error) {
-	d.mu.RLock()
-	val, ok := d.hash[key]
-	d.mu.RUnlock()
+// HGet gets map from dm by key.
+// Returns error if key not exists or
+// contains another type.
+func (dm *DataMap) HGet(key string) (map[string]string, error) {
+	dm.mu.RLock()
+	val, ok := dm.hash[key]
+	dm.mu.RUnlock()
 	if !ok {
 		return nil, keyNotExistErr
 	}
 	return val.HGet()
 }
 
+// HGetVal gets map from dm by outerKey and then
+// gets a value from map by innerKey.
+// Returns error if outerKey not exists or
+// outerKey contains another type or
+// innerKey not exists.
 func (dm *DataMap) HGetVal(outerKey, innerKey string) (string, error) {
 	dict, err := dm.HGet(outerKey)
 	if err != nil {
@@ -113,6 +143,9 @@ func (dm *DataMap) HGetVal(outerKey, innerKey string) (string, error) {
 	return val, nil
 }
 
+// HUpdate gets map from dm by outKey and then
+// updates inKey value. Returns error if outKey
+// not exists.
 func (dm *DataMap) HUpdate(outKey, inKey, value string) error {
 	dict, err := dm.HGet(outKey)
 	if err != nil {
@@ -122,6 +155,7 @@ func (dm *DataMap) HUpdate(outKey, inKey, value string) error {
 	return nil
 }
 
+// Keys gets all keys in dm.
 func (dm *DataMap) Keys() []string {
 	var keys []string
 	dm.mu.RLock()
@@ -132,12 +166,16 @@ func (dm *DataMap) Keys() []string {
 	return keys
 }
 
+// Remove deletes key from dm.
 func (dm *DataMap) Remove(key string) {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 	delete(dm.hash, key)
 }
 
+// Expire sets ttl for key in dm as sum of
+// current unix time + dur. Returns error
+// if key not exists.
 func (dm *DataMap) Expire(key string, dur int64) error {
 	if dur <= 0 {
 		return fmt.Errorf("ERROR: wrong duration for ttl")
@@ -153,6 +191,8 @@ func (dm *DataMap) Expire(key string, dur int64) error {
 	return nil
 }
 
+// Expireat sets ttl for key in dm.
+// Returns error if key not exists.
 func (dm *DataMap) Expireat(key string, ttl int64) error {
 	if ttl <= time.Now().UTC().Unix() {
 		return fmt.Errorf("ERROR: ttl must be greater than now")
@@ -167,6 +207,8 @@ func (dm *DataMap) Expireat(key string, ttl int64) error {
 	return nil
 }
 
+// Persist reset ttl to default for data in dm by key.
+// Returns error if key not exists.
 func (dm *DataMap) Persist(key string) error {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
@@ -179,6 +221,8 @@ func (dm *DataMap) Persist(key string) error {
 
 }
 
+// TTL gets ttl from dm by key.
+// Returns error if key not exists.
 func (dm *DataMap) TTL(key string) (string, error) {
 	dm.mu.RLock()
 	data, ok := dm.hash[key]

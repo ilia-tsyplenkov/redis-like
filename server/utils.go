@@ -14,19 +14,14 @@ var keyNotSpecifiedErr = errors.New("ERROR: key is not specified")
 var unknownCmdErr = errors.New("ERROR: unknown command")
 var wrongArgErr = errors.New("ERROR: wrong argument type")
 
+// dataParser split s by spaces except quoted substring.
 func dataParser(s string) []string {
-	// var res []string
-	// splitted := strings.Split(s, " ")
-	// for _, item := range splitted {
-	// 	if item != "" {
-	// 		res = append(res, item)
-	// 	}
-	// }
-	// return res
 	r := regexp.MustCompile("\".+?\"|\\S+")
 	return r.FindAllString(s, -1)
 }
 
+// MapParser creates map from slice.
+// Returns non nil error if slice contains not enough items.
 func MapParser(sl []string) (map[string]string, error) {
 	if len(sl) < 2 {
 		return nil, fewArgsErr
@@ -41,14 +36,17 @@ func MapParser(sl []string) (map[string]string, error) {
 	return res, nil
 }
 
+// ParamsParser split sl slice to key and value.
+// Returns non nil error if sl contains not enough items
 func ParamsParser(sl []string) (key string, value []string, err error) {
-	if len(sl) < 1 {
+	if len(sl) == 0 {
 		err = keyNotSpecifiedErr
 		return key, value, err
 	}
 	return sl[0], sl[1:], nil
 }
 
+// CommandHandler split s to cmd and data parts.
 func CommandHandler(s string) (cmd string, data []string, err error) {
 	if len(s) == 0 {
 		return cmd, data, fmt.Errorf("no command provided")
@@ -57,13 +55,13 @@ func CommandHandler(s string) (cmd string, data []string, err error) {
 	return parsed[0], parsed[1:], nil
 }
 
+// DataHandler provides handlers for telnet like API.
 func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 	switch cmd {
 	case "keys":
 		return fmt.Sprintf("%v", dm.Keys()), nil
 	}
 	key, data, err := ParamsParser(s)
-	//log.Printf("ParamsParser key: %s, data: %s, len: %d, err: %s\n", key, data, len(data), err)
 	if err != nil {
 		return "", err
 	}
@@ -130,6 +128,22 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return res, nil
 		}
+	case "lupdate":
+		if len(data) < 2 {
+			return "", fewArgsErr
+		}
+		if len(data) > 2 {
+			return "", manyArgsErr
+		}
+		index, err := strconv.Atoi(data[0])
+		if err != nil {
+			return "", err
+		}
+		err = dm.LUpdate(key, index, data[1])
+		if err != nil {
+			return "", err
+		}
+		return "OK", nil
 	case "hset":
 		dict, err := MapParser(data)
 		if err != nil {
@@ -164,6 +178,20 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return res, nil
 		}
+	case "hupdate":
+		if len(data) < 2 {
+			return "", fewArgsErr
+		}
+		if len(data) > 2 {
+			return "", manyArgsErr
+		}
+		inKey := data[0]
+		value := data[1]
+		err := dm.HUpdate(key, inKey, value)
+		if err != nil {
+			return "", err
+		}
+		return "OK", nil
 	case "ttl":
 		if len(data) > 0 {
 			return "", manyArgsErr
