@@ -97,6 +97,65 @@ func TestMapLGet(t *testing.T) {
 	}
 }
 
+func TestMapLGetIt(t *testing.T) {
+	var dm DataMap
+	dm.Init()
+	key := "test"
+	dm.hash[key] = &Data{Value: []string{"one", "two"}}
+	if _, err := dm.LGetIt("i'm groot", 1); err != keyNotExistErr {
+		t.Fatalf("got '%v', want '%v' error for non existing key", err, keyNotExistErr)
+	}
+	if _, err := dm.LGetIt(key, 100); err != invalidIndexErr {
+		t.Fatalf("got '%v', want '%v' error for invalid index", err, invalidIndexErr)
+	}
+	got, err := dm.LGetIt(key, 0)
+	if err != nil {
+		t.Fatalf("got '%v', expected 'nil' error for valid case", err)
+	}
+	if got != "one" {
+		t.Fatalf("got '%s', expected 'one' value", got)
+	}
+}
+
+func TestMapHGet(t *testing.T) {
+	key := "test"
+	have := map[string]string{"hello": "world"}
+	var dm DataMap
+	dm.Init()
+	dm.hash[key] = &Data{Value: have}
+	if _, err := dm.HGet("i'm groot"); err != keyNotExistErr {
+		t.Fatalf("got '%v', want '%v' error for non existing key", err, keyNotExistErr)
+	}
+	got, err := dm.HGet(key)
+	if err != nil {
+		t.Fatalf("got '%v', want 'nil' error for valid case", err)
+	}
+	if fmt.Sprintf("%v", have) != fmt.Sprintf("%v", got) {
+		t.Fatalf("got '%v', expected '%v'", got, have)
+	}
+}
+
+func TestMapHGetVal(t *testing.T) {
+	key := "test"
+	have := map[string]string{"hello": "world"}
+	var dm DataMap
+	dm.Init()
+	dm.hash[key] = &Data{Value: have}
+	if _, err := dm.HGetVal("i'm groot", "hello"); err != keyNotExistErr {
+		t.Fatalf("got '%v', want '%v' error for non existing key", err, keyNotExistErr)
+	}
+	if _, err := dm.HGetVal(key, "i'm groot"); err != invalidInnerKeyErr {
+		t.Fatalf("got '%v', want '%v' error for non existing inner key", err, invalidInnerKeyErr)
+	}
+	got, err := dm.HGetVal(key, "hello")
+	if err != nil {
+		t.Fatalf("got '%v', want 'nil' erorr for valid case", err)
+	}
+	if got != have["hello"] {
+		t.Fatalf("got %q, want %q", got, have["hello"])
+	}
+}
+
 func TestMapHSet(t *testing.T) {
 	key := "test"
 	have := map[string]string{"hello": "world"}

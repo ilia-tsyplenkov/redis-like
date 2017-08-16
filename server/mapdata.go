@@ -8,6 +8,8 @@ import (
 )
 
 var keyNotExistErr = errors.New("key not exists")
+var invalidIndexErr = errors.New("invalid list index")
+var invalidInnerKeyErr = errors.New("invalid inner key")
 
 type DataMap struct {
 	mu   sync.RWMutex
@@ -56,6 +58,18 @@ func (d *DataMap) LGet(key string) ([]string, error) {
 	return val.LGet()
 }
 
+func (dm *DataMap) LGetIt(key string, index int) (string, error) {
+	s, err := dm.LGet(key)
+	if err != nil {
+		return "", err
+	}
+	if index < 0 || index >= len(s) {
+		return "", invalidIndexErr
+	}
+	return s[index], nil
+
+}
+
 func (d *DataMap) HSet(key string, val map[string]string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -73,6 +87,18 @@ func (d *DataMap) HGet(key string) (map[string]string, error) {
 		return nil, keyNotExistErr
 	}
 	return val.HGet()
+}
+
+func (dm *DataMap) HGetVal(outerKey, innerKey string) (string, error) {
+	dict, err := dm.HGet(outerKey)
+	if err != nil {
+		return "", err
+	}
+	val, ok := dict[innerKey]
+	if !ok {
+		return "", invalidInnerKeyErr
+	}
+	return val, nil
 }
 
 func (dm *DataMap) Keys() []string {
