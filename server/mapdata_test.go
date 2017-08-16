@@ -2,6 +2,8 @@ package server
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -115,6 +117,32 @@ func TestMapHSet(t *testing.T) {
 
 }
 
+func TestMapKeys(t *testing.T) {
+	var dm DataMap
+	dm.hash = map[string]*Data{"one": &Data{}, "two": &Data{}}
+	want := []string{"one", "two"}
+	sort.Strings(want)
+	got := dm.Keys()
+	sort.Strings(got)
+	if fmt.Sprintf("%v", got) != fmt.Sprintf("%v", want) {
+		t.Errorf("Keys() = %v, want %v", got, want)
+	}
+}
+
+func TestMapRemove(t *testing.T) {
+	var dm DataMap
+	dm.hash = map[string]*Data{"one": &Data{}, "two": &Data{}}
+	dm.Remove("one")
+	if _, err := dm.Get("one"); err != keyNotExistErr {
+		t.Errorf("got '%v', expected '%v' error", err, keyNotExistErr)
+	}
+	want := []string{"two"}
+	got := dm.Keys()
+	if fmt.Sprintf("%v", got) != fmt.Sprintf("%v", want) {
+		t.Errorf("Keys() = %v, want %v", got, want)
+	}
+}
+
 func TestMapExpire(t *testing.T) {
 	key := "test"
 	var dm DataMap
@@ -169,7 +197,8 @@ func TestMapTTL(t *testing.T) {
 	if err != nil {
 		t.Errorf("got '%v' error, expected 'nil' error", err)
 	}
-	if ttl != string(want) {
-		t.Errorf("got '%s' ttl, expected '%d' ttl", ttl, want)
+	sWant := strconv.Itoa(int(want))
+	if ttl != sWant {
+		t.Errorf("got '%s' ttl, expected '%s' ttl", ttl, sWant)
 	}
 }

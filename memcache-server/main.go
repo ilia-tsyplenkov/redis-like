@@ -7,28 +7,32 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var globalHash = make(map[string]*server.DataMap)
 var host string = "localhost"
 var port string = "8000"
 var addr string = host + ":" + port
+var defalutDbIndex string = "0"
+
+var launchChecker = make(chan string)
 
 func init() {
 	var dm server.DataMap
 	dm.Init()
-	globalHash["0"] = &dm
+	globalHash[defalutDbIndex] = &dm
 }
 
 func main() {
-	// var dm DataMap
-	// dm.Init()
-	// globalHash["0"] = dm
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	go ttlMonitor()
+	launchChecker <- defalutDbIndex
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -40,8 +44,8 @@ func main() {
 }
 
 func handleConn(c net.Conn) {
-	prompt := fmt.Sprintf("%s[0] ", addr)
-	dm := globalHash["0"]
+	prompt := fmt.Sprintf("%s[%s] ", addr, defalutDbIndex)
+	dm := globalHash[defalutDbIndex]
 	input := bufio.NewScanner(c)
 	defer c.Close()
 	fmt.Fprintf(c, "%s", prompt)
@@ -59,11 +63,14 @@ func handleConn(c net.Conn) {
 				continue
 			} else {
 				id := data[0]
-				dm, ok := globalHash[id]
+				_, ok := globalHash[id]
 				if !ok {
 					globalHash[id] = &server.DataMap{}
 					dm = globalHash[id]
 					dm.Init()
+					launchChecker <- id
+				} else {
+					dm = globalHash[id]
 				}
 				prompt = fmt.Sprintf("%s[%s] ", addr, id)
 				fmt.Fprintf(c, "%s", prompt)
@@ -76,5 +83,34 @@ func handleConn(c net.Conn) {
 			continue
 		}
 		fmt.Fprintf(c, "%s\n%s", result, prompt)
+	}
+}
+
+func ttlChecker(dm *server.DataMap) {
+	for {
+		for _, key := range dm.Keys() {
+			ttl, _ := dm.TTL(key)
+			if ttl == "-1" {
+				continue
+			}
+			dTTL, err := strconv.Atoi(ttl)
+			if err != nil {
+				log.Printf("Got unhandled ttl: %q for %q key\n", ttl, key)
+				log.Printf("TTL for %q key has been reseted\n", key)
+				dm.Persist(key)
+				continue
+			}
+			if int64(dTTL) < time.Now().UTC().Unix() {
+				log.Printf("%q key has been removed. TTL expired\n", key)
+				dm.Remove(key)
+			}
+		}
+	}
+}
+
+func ttlMonitor() {
+	for {
+		key := <-launchChecker
+		go ttlChecker(globalHash[key])
 	}
 }

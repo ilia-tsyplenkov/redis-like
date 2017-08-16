@@ -75,14 +75,20 @@ func (d *DataMap) HGet(key string) (map[string]string, error) {
 	return val.HGet()
 }
 
-func (d *DataMap) Keys() []string {
+func (dm *DataMap) Keys() []string {
 	var keys []string
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-	for key := range d.hash {
+	dm.mu.RLock()
+	defer dm.mu.RUnlock()
+	for key := range dm.hash {
 		keys = append(keys, key)
 	}
 	return keys
+}
+
+func (dm *DataMap) Remove(key string) {
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	delete(dm.hash, key)
 }
 
 func (dm *DataMap) Expire(key string, dur int64) error {
@@ -135,7 +141,7 @@ func (dm *DataMap) TTL(key string) (string, error) {
 	}
 	ttl := data.TTL()
 	if ttl > 0 {
-		return string(ttl), nil
+		return fmt.Sprintf("%d", ttl), nil
 	}
 	return "-1", nil
 }

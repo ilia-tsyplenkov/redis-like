@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 )
 
 var fewArgsErr = errors.New("not enough arguments")
@@ -11,6 +12,7 @@ var missValueErr = errors.New("value is missed")
 var manyArgsErr = errors.New("too many arguments")
 var keyNotSpecifiedErr = errors.New("key is not specified")
 var unknownCmdErr = errors.New("unknown command")
+var wrongArgErr = errors.New("wrong argument type")
 
 func dataParser(s string) []string {
 	// var res []string
@@ -57,7 +59,7 @@ func CommandHandler(s string) (cmd string, data []string, err error) {
 
 func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 	switch cmd {
-	case "keys", "KEYS":
+	case "keys":
 		return fmt.Sprintf("%v", dm.Keys()), nil
 	}
 	key, data, err := ParamsParser(s)
@@ -66,7 +68,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		return "", err
 	}
 	switch cmd {
-	case "set", "SET":
+	case "set":
 		if len(data) == 0 {
 			return "", fewArgsErr
 		}
@@ -80,7 +82,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 			return "OK", nil
 		}
 
-	case "get", "GET":
+	case "get":
 		if len(data) > 0 {
 			return "", manyArgsErr
 		}
@@ -91,7 +93,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 			return res, nil
 		}
 
-	case "lset", "LSET":
+	case "lset":
 		if len(data) < 1 {
 			return "", fewArgsErr
 		}
@@ -101,7 +103,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return "OK", nil
 		}
-	case "lget", "LGET":
+	case "lget":
 		if len(data) > 0 {
 			return "", manyArgsErr
 		}
@@ -111,7 +113,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return fmt.Sprintf("%v", res), nil
 		}
-	case "hset", "HSET":
+	case "hset":
 		dict, err := MapParser(data)
 		if err != nil {
 			return "", err
@@ -122,7 +124,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return "OK", nil
 		}
-	case "hget", "HGET":
+	case "hget":
 		if len(data) > 0 {
 			return "", manyArgsErr
 		}
@@ -132,6 +134,61 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		} else {
 			return fmt.Sprintf("%v", dict), nil
 		}
+	case "ttl":
+		if len(data) > 0 {
+			return "", manyArgsErr
+		}
+		ttl, err := dm.TTL(key)
+		if err != nil {
+			return "", err
+		}
+		return ttl, nil
+	case "expire":
+		if len(data) == 0 {
+			return "", fewArgsErr
+		}
+		if len(data) > 1 {
+			return "", manyArgsErr
+		}
+		dur, err := strconv.Atoi(data[0])
+		if err != nil {
+			return "", err
+		}
+		err = dm.Expire(key, int64(dur))
+		if err != nil {
+			return "", err
+		}
+		return "OK", nil
+	case "expireat":
+		if len(data) == 0 {
+			return "", fewArgsErr
+		}
+		if len(data) > 1 {
+			return "", manyArgsErr
+		}
+		ttl, err := strconv.Atoi(data[0])
+		if err != nil {
+			return "", err
+		}
+		err = dm.Expireat(key, int64(ttl))
+		if err != nil {
+			return "", err
+		}
+		return "OK", nil
+	case "persist":
+		if len(data) != 0 {
+			return "", manyArgsErr
+		}
+		if err := dm.Persist(key); err != nil {
+			return "", err
+		}
+		return "OK", nil
+	case "remove":
+		if len(data) != 0 {
+			return "", manyArgsErr
+		}
+		dm.Remove(key)
+		return "OK", nil
 	default:
 		return "", unknownCmdErr
 	}
