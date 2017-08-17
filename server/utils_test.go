@@ -126,6 +126,52 @@ func TestLGetDataHandler(t *testing.T) {
 	}
 }
 
+func TestLGetItDataHandler(t *testing.T) {
+	var dm DataMap
+	dm.Init()
+	cmd := "lgetit"
+	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != fewArgsErr {
+		t.Fatalf("got '%v', expected '%v' error for not enough args", err, fewArgsErr)
+	}
+	if _, err := DataHandler(&dm, cmd, []string{"key", "ind1", "ind2"}); err != manyArgsErr {
+		t.Fatalf("got '%v', expected '%v' error for not enough args", err, manyArgsErr)
+	}
+	key := "test"
+	dm.hash[key] = &Data{Value: []string{"hello", "world"}}
+	have := "world"
+	got, err := DataHandler(&dm, cmd, []string{key, "1"})
+	if err != nil {
+		t.Fatalf("got '%v', expected 'nil' erorr for valid case", err)
+	}
+	if got != have {
+		t.Fatalf("got %q, want %q", got, have)
+	}
+
+}
+
+func TestLUpdateDataHandler(t *testing.T) {
+	var dm DataMap
+	dm.Init()
+	cmd := "lupdate"
+	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != fewArgsErr {
+		t.Fatalf("got '%v', expected '%v' error for not enough args", err, fewArgsErr)
+	}
+	if _, err := DataHandler(&dm, cmd, []string{"key", "ind1", "ind2", "value"}); err != manyArgsErr {
+		t.Fatalf("got '%v', expected '%v' error for not enough args", err, manyArgsErr)
+	}
+	key := "test"
+	dm.hash[key] = &Data{Value: []string{"hello", "world"}}
+	have := "bye"
+	_, err := DataHandler(&dm, cmd, []string{key, "1", have})
+	if err != nil {
+		t.Fatalf("got '%v', expected nil error for valid case", err)
+	}
+	got, _ := dm.LGetIt(key, 1)
+	if got != have {
+		t.Fatalf("got %q, expected %q", got, have)
+	}
+}
+
 func TestHSetDataHandler(t *testing.T) {
 	var dm DataMap
 	cmd := "hset"
@@ -154,5 +200,49 @@ func TestHGetDataHandler(t *testing.T) {
 	dm.hash[key] = &Data{Value: map[string]string{"key": "value"}}
 	if _, err := DataHandler(&dm, cmd, []string{key}); err != nil {
 		t.Errorf("got '%v', expected 'nil' error", err)
+	}
+}
+
+func TestHGetValDataHandler(t *testing.T) {
+	var dm DataMap
+	dm.Init()
+	cmd := "hgetval"
+	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != fewArgsErr {
+		t.Errorf("got '%v', want '%v'", err, fewArgsErr)
+	}
+	if _, err := DataHandler(&dm, cmd, []string{"outKey", "inKey", "value"}); err != manyArgsErr {
+		t.Errorf("got '%v', want '%v'", err, manyArgsErr)
+	}
+	key := "test"
+	dm.hash[key] = &Data{Value: map[string]string{"key": "value"}}
+	have := "value"
+	got, err := DataHandler(&dm, cmd, []string{key, "key"})
+	if err != nil {
+		t.Fatalf("got '%v', want 'nil' error for valid case", err)
+	}
+	if got != have {
+		t.Fatalf("got %q, expected %q", got, have)
+	}
+}
+
+func TestHUpdateDataHandler(t *testing.T) {
+	var dm DataMap
+	dm.Init()
+	cmd := "hupdate"
+	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != fewArgsErr {
+		t.Fatalf("got '%v', want '%v' error for not enough args case", err, fewArgsErr)
+	}
+	if _, err := DataHandler(&dm, cmd, []string{"outKey", "inKey", "value", "value1"}); err != manyArgsErr {
+		t.Fatalf("got '%v', want '%v' error for too many args case", err, manyArgsErr)
+	}
+	key := "test"
+	have := "bye"
+	dm.hash[key] = &Data{Value: map[string]string{"hello": "world"}}
+	if _, err := DataHandler(&dm, cmd, []string{key, "hello", have}); err != nil {
+		t.Fatalf("got '%v', want 'nil' error for valid case", err)
+	}
+	got, _ := dm.HGetVal(key, "hello")
+	if got != have {
+		t.Fatalf("got %q, want %q", got, have)
 	}
 }
