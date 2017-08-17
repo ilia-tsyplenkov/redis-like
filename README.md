@@ -14,37 +14,49 @@ Get the string value of a key
 - LSET key value
 Set a list value of a key
   - Example:
+    ```
     server> LSET lst "I'm a list" with "hello world inside"
+    ```
 - LGET key
 Get the list value of a key
   - Example:
+    ```
     server> LSET lst "I'm a list" with "hello world inside"
     server> LGET lst
     ["I'm a list" with "hello world inside"]
+    ```
 - LGETIT key index
 Get a value by list index of a key
   - Example:
+    ```
     server> LSET lst "I'm a list" with "hello world inside"
     server> LGETIT lst 2
     "hello world inside"
+    ```
 - LUPDATE key index value
 Update a value in list index of a key
 - HSET key value
 Set the dict value of a key
   - Example:
+    ```
     server> HSET dict a dict with "hello world"
+    ```
 - HGET key
 Get the dict value of a key
   - Example:
+    ```
     server> HSET dict a dict with "hello world"
     server> HGET dict
     map[a:dict with:"hello world"]
+    ```
 - HGETVAL outerKey innerKey
 Get a value from a dict by innerKey of a outerKey
-  Example:
+  - Example:
+    ```
     server> HSET dict a dict with "hello world"
     server> HGETVAL dict with
     "hello world"
+    ```
 - HUPDATE outerKey innerKey value
 Update a value of a innerKey of dict outerKey
 Or create a new innerKey: value pair if innerKey
@@ -72,8 +84,10 @@ Remove the expiration from a key
 You may user netcat, telnet or another simular solution
 - nc SERVER_HOST SERVER_PORT
 - Example:
+    ```
     >itsyplenkov$ nc localhost 8000
     >localhost:8000[0]
     >localhost:8000[0] set str "hello world"
     >OK
     >localhost:8000[0]
+    ```
