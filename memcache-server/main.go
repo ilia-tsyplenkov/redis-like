@@ -1,9 +1,10 @@
 package main
 
 import (
-	"juno/server"
+	"redis-like/server"
 
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -14,8 +15,8 @@ import (
 
 var globalHash = make(map[string]*server.DataMap)
 var host string = "localhost"
-var port string = "8000"
-var addr string = host + ":" + port
+var port = flag.String("port", "8000", "sever port")
+var addr string
 var defalutDbIndex string = "0"
 
 var launchChecker = make(chan string)
@@ -28,6 +29,8 @@ func init() {
 }
 
 func main() {
+	flag.Parse()
+	addr = host + ":" + *port
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
@@ -44,6 +47,9 @@ func main() {
 	}
 }
 
+// handleConn handles each c connection.
+// it also sends db id through launchChecker channel
+// for each new database.
 func handleConn(c net.Conn) {
 	prompt := fmt.Sprintf("%s[%s] ", addr, defalutDbIndex)
 	dm := globalHash[defalutDbIndex]
@@ -87,6 +93,8 @@ func handleConn(c net.Conn) {
 	}
 }
 
+// ttlChecker check ttl for each key
+// in endless loop. It resets unhandled ttl to 0.
 func ttlChecker(dm *server.DataMap) {
 	for {
 		for _, key := range dm.Keys() {
@@ -109,6 +117,8 @@ func ttlChecker(dm *server.DataMap) {
 	}
 }
 
+// ttlMonitor get db id from launchChecker channel
+// and launch ttlChecker got it.
 func ttlMonitor() {
 	for {
 		key := <-launchChecker

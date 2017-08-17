@@ -13,7 +13,7 @@ func TestSet(t *testing.T) {
 	}
 	got, _ := d.value.(string)
 	if got != s {
-		t.Errorf("got %s, want: %s", got, s)
+		t.Fatalf("got %s, want: %s", got, s)
 	}
 }
 
@@ -25,7 +25,7 @@ func TestGet(t *testing.T) {
 		t.Fatalf("d.SGet error: %v", err)
 	}
 	if got != want {
-		t.Errorf("d.SGet = %s, want: %s", got, want)
+		t.Fatalf("d.SGet = %s, want: %s", got, want)
 	}
 
 }
@@ -39,7 +39,7 @@ func TestLSet(t *testing.T) {
 	}
 	got, _ := d.value.([]string)
 	if len(got) != len(s) {
-		t.Errorf("got %v, want: %v", got, s)
+		t.Fatalf("got %v, want: %v", got, s)
 	}
 }
 
@@ -51,7 +51,7 @@ func TestLGet(t *testing.T) {
 		t.Fatalf("d.LGet() error: %v", err)
 	}
 	if len(got) != len(want) {
-		t.Errorf("d.LGet() = %v, want: %v", got, want)
+		t.Fatalf("d.LGet() = %v, want: %v", got, want)
 	}
 }
 
@@ -59,7 +59,7 @@ func TestTTL(t *testing.T) {
 	ttl := int64(123456)
 	d := data{ttl: ttl}
 	if d.TTL() != ttl {
-		t.Errorf("d.TTL() = %d, want: %d", d.TTL(), ttl)
+		t.Fatalf("d.TTL() = %d, want: %d", d.TTL(), ttl)
 	}
 }
 
@@ -68,7 +68,7 @@ func TestSetTTL(t *testing.T) {
 	var d data
 	d.SetTTL(ttl)
 	if d.ttl != ttl {
-		t.Errorf("d.SetTTL put %d but got %d", ttl, d.ttl)
+		t.Fatalf("d.SetTTL put %d but got %d", ttl, d.ttl)
 	}
 }
 
@@ -81,7 +81,7 @@ func TestHSet(t *testing.T) {
 	}
 	got, _ := d.value.(map[string]string)
 	if len(got) != len(dict) {
-		t.Errorf("got %v, want: %v", got, dict)
+		t.Fatalf("got %v, want: %v", got, dict)
 	}
 }
 
@@ -93,7 +93,7 @@ func TestHGet(t *testing.T) {
 		t.Fatalf("d.HGet() error: %v", err)
 	}
 	if len(got) != len(want) {
-		t.Errorf("d.HGet() = %v, want: %v", got, want)
+		t.Fatalf("d.HGet() = %v, want: %v", got, want)
 	}
 
 }

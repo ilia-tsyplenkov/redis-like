@@ -1,3 +1,4 @@
+// package server provides API for building memcache server.
 package server
 
 import (

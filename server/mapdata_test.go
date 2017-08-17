@@ -25,7 +25,7 @@ func TestMapSet(t *testing.T) {
 	dm.hash[key] = &data{value: mapVal}
 	err = dm.Set(key, want)
 	if err != typeMismatchErr {
-		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
+		t.Fatalf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 }
 
@@ -51,7 +51,7 @@ func TestMapGet(t *testing.T) {
 	dm.hash[listKey] = &data{value: []string{"hello", "world"}}
 	got, err = dm.Get(listKey)
 	if err != typeMismatchErr {
-		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
+		t.Fatalf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 
 }
@@ -73,7 +73,7 @@ func TestMapLSet(t *testing.T) {
 	dm.hash[key] = &data{value: mapVal}
 	err = dm.LSet(key, have)
 	if err != typeMismatchErr {
-		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
+		t.Fatalf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 }
 
@@ -93,7 +93,7 @@ func TestMapLGet(t *testing.T) {
 	skey := "str"
 	dm.hash[skey] = &data{value: "string"}
 	if _, err = dm.LGet(skey); err != typeMismatchErr {
-		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
+		t.Fatalf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 }
 
@@ -209,7 +209,7 @@ func TestMapHSet(t *testing.T) {
 	lst := []string{"hello", "world"}
 	dm.hash[key] = &data{value: lst}
 	if err := dm.HSet(key, have); err != typeMismatchErr {
-		t.Errorf("got '%v', expected '%v' error", err, typeMismatchErr)
+		t.Fatalf("got '%v', expected '%v' error", err, typeMismatchErr)
 	}
 
 }
@@ -222,7 +222,7 @@ func TestMapKeys(t *testing.T) {
 	got := dm.Keys()
 	sort.Strings(got)
 	if fmt.Sprintf("%v", got) != fmt.Sprintf("%v", want) {
-		t.Errorf("Keys() = %v, want %v", got, want)
+		t.Fatalf("Keys() = %v, want %v", got, want)
 	}
 }
 
@@ -231,12 +231,12 @@ func TestMapRemove(t *testing.T) {
 	dm.hash = map[string]*data{"one": &data{}, "two": &data{}}
 	dm.Remove("one")
 	if _, err := dm.Get("one"); err != keyNotExistErr {
-		t.Errorf("got '%v', expected '%v' error", err, keyNotExistErr)
+		t.Fatalf("got '%v', expected '%v' error", err, keyNotExistErr)
 	}
 	want := []string{"two"}
 	got := dm.Keys()
 	if fmt.Sprintf("%v", got) != fmt.Sprintf("%v", want) {
-		t.Errorf("Keys() = %v, want %v", got, want)
+		t.Fatalf("Keys() = %v, want %v", got, want)
 	}
 }
 
@@ -249,7 +249,7 @@ func TestMapExpire(t *testing.T) {
 		t.Error("ttl duration must be positive")
 	}
 	if err := dm.Expire("i'm groot", 10); err != keyNotExistErr {
-		t.Errorf("got '%v', want '%v' error", err, keyNotExistErr)
+		t.Fatalf("got '%v', want '%v' error", err, keyNotExistErr)
 	}
 	if err := dm.Expire(key, 1); err != nil {
 		t.Fatalf("got '%v', expected 'nil' error", err)
@@ -265,10 +265,10 @@ func TestMapExpireat(t *testing.T) {
 		t.Error("ttl should be in the future")
 	}
 	if err := dm.Expireat("i'm groot", time.Now().UTC().Unix()+10); err != keyNotExistErr {
-		t.Errorf("got '%v', want '%v' error", err, keyNotExistErr)
+		t.Fatalf("got '%v', want '%v' error", err, keyNotExistErr)
 	}
 	if err := dm.Expireat(key, time.Now().UTC().Unix()+10); err != nil {
-		t.Errorf("got '%v', expected 'nil' error", err)
+		t.Fatalf("got '%v', expected 'nil' error", err)
 	}
 
 }
@@ -279,23 +279,23 @@ func TestMapTTL(t *testing.T) {
 	dm.Init()
 	dm.hash[key] = &data{}
 	if _, err := dm.TTL("i'm groot"); err != keyNotExistErr {
-		t.Errorf("got '%v', want '%v' error", err, keyNotExistErr)
+		t.Fatalf("got '%v', want '%v' error", err, keyNotExistErr)
 	}
 	ttl, err := dm.TTL(key)
 	if err != nil {
-		t.Errorf("got '%v' error, expected 'nil' error", err)
+		t.Fatalf("got '%v' error, expected 'nil' error", err)
 	}
 	if ttl != "-1" {
-		t.Errorf("got '%s' ttl, expected '-1' ttl with no expire", ttl)
+		t.Fatalf("got '%s' ttl, expected '-1' ttl with no expire", ttl)
 	}
 	want := int64(100)
 	dm.hash[key] = &data{ttl: want}
 	ttl, err = dm.TTL(key)
 	if err != nil {
-		t.Errorf("got '%v' error, expected 'nil' error", err)
+		t.Fatalf("got '%v' error, expected 'nil' error", err)
 	}
 	sWant := strconv.Itoa(int(want))
 	if ttl != sWant {
-		t.Errorf("got '%s' ttl, expected '%s' ttl", ttl, sWant)
+		t.Fatalf("got '%s' ttl, expected '%s' ttl", ttl, sWant)
 	}
 }

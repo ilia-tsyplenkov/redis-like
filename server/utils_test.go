@@ -12,17 +12,17 @@ func TestMapParser(t *testing.T) {
 	}
 	slice = []string{"one", "two", "three"}
 	if _, err := mapParser(slice); err != missValueErr {
-		t.Errorf("slice with odd items number shoud not be allowed: %v", slice)
+		t.Fatalf("slice with odd items number shoud not be allowed: %v", slice)
 	}
 	slice = append(slice, "four")
 	got, err := mapParser(slice)
 	if err != nil {
-		t.Errorf("mapParser(%v) unexpected error: %v", slice, err)
+		t.Fatalf("mapParser(%v) unexpected error: %v", slice, err)
 	}
 	want := map[string]string{"one": "two", "three": "four"}
 	for key := range got {
 		if got[key] != want[key] {
-			t.Errorf("mapParser(%v) = %v, want: %v", slice, got, want)
+			t.Fatalf("mapParser(%v) = %v, want: %v", slice, got, want)
 		}
 	}
 }
@@ -30,30 +30,30 @@ func TestMapParser(t *testing.T) {
 func TestParamsParser(t *testing.T) {
 	slice := []string{}
 	if _, _, err := paramsParser(slice); err != keyNotSpecifiedErr {
-		t.Errorf("empty slice %v should not be allowed", slice)
+		t.Fatalf("empty slice %v should not be allowed", slice)
 	}
 
 	slice = []string{"key"}
 	key, val, err := paramsParser(slice)
 	if err != nil {
-		t.Errorf("paramsParser(%v) error: %v", slice, err)
+		t.Fatalf("paramsParser(%v) error: %v", slice, err)
 	}
 
 	if key != "key" {
-		t.Errorf("paramsParser(%v) = %s key, want: 'key'", slice, key)
+		t.Fatalf("paramsParser(%v) = %s key, want: 'key'", slice, key)
 	}
 	if len(val) > 0 {
-		t.Errorf("there is no value in the %v slice", slice)
+		t.Fatalf("there is no value in the %v slice", slice)
 	}
 
 	slice = []string{"key", "val1", "val2"}
 	key, val, err = paramsParser(slice)
 	if err != nil {
-		t.Errorf("paramsParser(%v) error: %v", slice, err)
+		t.Fatalf("paramsParser(%v) error: %v", slice, err)
 	}
 	want := fmt.Sprintf("%v", slice[1:])
 	if want != fmt.Sprintf("%v", val) {
-		t.Errorf("paramsParser(%v) = %v, want: %v", slice, val, want)
+		t.Fatalf("paramsParser(%v) = %v, want: %v", slice, val, want)
 	}
 
 }
@@ -62,7 +62,7 @@ func TestWrongDataHandler(t *testing.T) {
 	var dm DataMap
 	cmd := "I am Groot"
 	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != unknownCmdErr {
-		t.Errorf("got '%v', want: '%v'", err, unknownCmdErr)
+		t.Fatalf("got '%v', want: '%v'", err, unknownCmdErr)
 	}
 }
 
@@ -71,15 +71,15 @@ func TestSetDataHandler(t *testing.T) {
 	cmd := "set"
 	dm.Init()
 	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != fewArgsErr {
-		t.Errorf("got '%v', want: '%v'", err, fewArgsErr)
+		t.Fatalf("got '%v', want: '%v'", err, fewArgsErr)
 	}
 	if _, err := DataHandler(&dm, cmd, []string{"key", "hello", "world"}); err != manyArgsErr {
-		t.Errorf("got '%v', want: '%v'", err, manyArgsErr)
+		t.Fatalf("got '%v', want: '%v'", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &data{value: ""}
 	if _, err := DataHandler(&dm, cmd, []string{key, "hello"}); err != nil {
-		t.Errorf("got '%v', expected 'nil'", err)
+		t.Fatalf("got '%v', expected 'nil'", err)
 	}
 
 }
@@ -89,12 +89,12 @@ func TestGetDataHandler(t *testing.T) {
 	cmd := "get"
 	dm.Init()
 	if _, err := DataHandler(&dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
-		t.Errorf("got '%v', want: '%v'", err, manyArgsErr)
+		t.Fatalf("got '%v', want: '%v'", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &data{value: "hello"}
 	if _, err := DataHandler(&dm, cmd, []string{key}); err != nil {
-		t.Errorf("got '%v', expected 'nil'", err)
+		t.Fatalf("got '%v', expected 'nil'", err)
 	}
 }
 
@@ -103,12 +103,12 @@ func TestLSetDataHandler(t *testing.T) {
 	cmd := "lset"
 	dm.Init()
 	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != fewArgsErr {
-		t.Errorf("got '%v', want '%v'", err, fewArgsErr)
+		t.Fatalf("got '%v', want '%v'", err, fewArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &data{value: []string{}}
 	if _, err := DataHandler(&dm, cmd, []string{key, "hello", "world"}); err != nil {
-		t.Errorf("got '%v', expected 'nil' error", err)
+		t.Fatalf("got '%v', expected 'nil' error", err)
 	}
 }
 
@@ -117,12 +117,12 @@ func TestLGetDataHandler(t *testing.T) {
 	dm.Init()
 	cmd := "lget"
 	if _, err := DataHandler(&dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
-		t.Errorf("got '%v', expected '%v' error", err, manyArgsErr)
+		t.Fatalf("got '%v', expected '%v' error", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &data{value: []string{"hello", "world"}}
 	if _, err := DataHandler(&dm, cmd, []string{key}); err != nil {
-		t.Errorf("got '%v', expected 'nil' error", err)
+		t.Fatalf("got '%v', expected 'nil' error", err)
 	}
 }
 
@@ -177,15 +177,15 @@ func TestHSetDataHandler(t *testing.T) {
 	cmd := "hset"
 	dm.Init()
 	if _, err := DataHandler(&dm, cmd, []string{"key", "hello"}); err != fewArgsErr {
-		t.Errorf("got '%v', want '%v'", err, fewArgsErr)
+		t.Fatalf("got '%v', want '%v'", err, fewArgsErr)
 	}
 	if _, err := DataHandler(&dm, cmd, []string{"key", "one", "two", "three"}); err != missValueErr {
-		t.Errorf("got '%v', want '%v'", err, missValueErr)
+		t.Fatalf("got '%v', want '%v'", err, missValueErr)
 	}
 	key := "test"
 	dm.hash[key] = &data{value: map[string]string{}}
 	if _, err := DataHandler(&dm, cmd, []string{key, "key", "value"}); err != nil {
-		t.Errorf("got '%v', expected 'nil' error", err)
+		t.Fatalf("got '%v', expected 'nil' error", err)
 	}
 }
 
@@ -194,12 +194,12 @@ func TestHGetDataHandler(t *testing.T) {
 	dm.Init()
 	cmd := "hget"
 	if _, err := DataHandler(&dm, cmd, []string{"key", "hello"}); err != manyArgsErr {
-		t.Errorf("got '%v', expected '%v' error", err, manyArgsErr)
+		t.Fatalf("got '%v', expected '%v' error", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &data{value: map[string]string{"key": "value"}}
 	if _, err := DataHandler(&dm, cmd, []string{key}); err != nil {
-		t.Errorf("got '%v', expected 'nil' error", err)
+		t.Fatalf("got '%v', expected 'nil' error", err)
 	}
 }
 
@@ -208,10 +208,10 @@ func TestHGetValDataHandler(t *testing.T) {
 	dm.Init()
 	cmd := "hgetval"
 	if _, err := DataHandler(&dm, cmd, []string{"key"}); err != fewArgsErr {
-		t.Errorf("got '%v', want '%v'", err, fewArgsErr)
+		t.Fatalf("got '%v', want '%v'", err, fewArgsErr)
 	}
 	if _, err := DataHandler(&dm, cmd, []string{"outKey", "inKey", "value"}); err != manyArgsErr {
-		t.Errorf("got '%v', want '%v'", err, manyArgsErr)
+		t.Fatalf("got '%v', want '%v'", err, manyArgsErr)
 	}
 	key := "test"
 	dm.hash[key] = &data{value: map[string]string{"key": "value"}}
