@@ -6,12 +6,12 @@ import (
 
 func TestSet(t *testing.T) {
 	s := "hello world"
-	var d Data
+	var d data
 	err := d.SSet(s)
 	if err != nil {
 		t.Fatalf("d.SSet(%s) error: %v", s, err)
 	}
-	got, _ := d.Value.(string)
+	got, _ := d.value.(string)
 	if got != s {
 		t.Errorf("got %s, want: %s", got, s)
 	}
@@ -19,7 +19,7 @@ func TestSet(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	want := "hello world"
-	d := Data{Value: want}
+	d := data{value: want}
 	got, err := d.SGet()
 	if err != nil {
 		t.Fatalf("d.SGet error: %v", err)
@@ -32,12 +32,12 @@ func TestGet(t *testing.T) {
 
 func TestLSet(t *testing.T) {
 	s := []string{"hello", "world"}
-	var d Data
+	var d data
 	err := d.LSet(s)
 	if err != nil {
 		t.Fatalf("d.LSet(%v) error: %v", s, err)
 	}
-	got, _ := d.Value.([]string)
+	got, _ := d.value.([]string)
 	if len(got) != len(s) {
 		t.Errorf("got %v, want: %v", got, s)
 	}
@@ -45,7 +45,7 @@ func TestLSet(t *testing.T) {
 
 func TestLGet(t *testing.T) {
 	want := []string{"hello", "world"}
-	d := Data{Value: want}
+	d := data{value: want}
 	got, err := d.LGet()
 	if err != nil {
 		t.Fatalf("d.LGet() error: %v", err)
@@ -57,7 +57,7 @@ func TestLGet(t *testing.T) {
 
 func TestTTL(t *testing.T) {
 	ttl := int64(123456)
-	d := Data{ttl: ttl}
+	d := data{ttl: ttl}
 	if d.TTL() != ttl {
 		t.Errorf("d.TTL() = %d, want: %d", d.TTL(), ttl)
 	}
@@ -65,7 +65,7 @@ func TestTTL(t *testing.T) {
 
 func TestSetTTL(t *testing.T) {
 	ttl := int64(123456)
-	var d Data
+	var d data
 	d.SetTTL(ttl)
 	if d.ttl != ttl {
 		t.Errorf("d.SetTTL put %d but got %d", ttl, d.ttl)
@@ -74,12 +74,12 @@ func TestSetTTL(t *testing.T) {
 
 func TestHSet(t *testing.T) {
 	dict := map[string]string{"one": "hello", "two": "world"}
-	var d Data
+	var d data
 	err := d.HSet(dict)
 	if err != nil {
 		t.Fatalf("d.HSet(%v) error: %v", dict, err)
 	}
-	got, _ := d.Value.(map[string]string)
+	got, _ := d.value.(map[string]string)
 	if len(got) != len(dict) {
 		t.Errorf("got %v, want: %v", got, dict)
 	}
@@ -87,7 +87,7 @@ func TestHSet(t *testing.T) {
 
 func TestHGet(t *testing.T) {
 	want := map[string]string{"one": "hello", "two": "world"}
-	d := Data{Value: want}
+	d := data{value: want}
 	got, err := d.HGet()
 	if err != nil {
 		t.Fatalf("d.HGet() error: %v", err)

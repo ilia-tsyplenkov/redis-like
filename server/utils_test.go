@@ -7,53 +7,53 @@ import (
 
 func TestMapParser(t *testing.T) {
 	slice := []string{"one"}
-	if _, err := MapParser(slice); err != fewArgsErr {
+	if _, err := mapParser(slice); err != fewArgsErr {
 		t.Error("slice with len < 2 should not be allowed: %v", slice)
 	}
 	slice = []string{"one", "two", "three"}
-	if _, err := MapParser(slice); err != missValueErr {
+	if _, err := mapParser(slice); err != missValueErr {
 		t.Errorf("slice with odd items number shoud not be allowed: %v", slice)
 	}
 	slice = append(slice, "four")
-	got, err := MapParser(slice)
+	got, err := mapParser(slice)
 	if err != nil {
-		t.Errorf("MapParser(%v) unexpected error: %v", slice, err)
+		t.Errorf("mapParser(%v) unexpected error: %v", slice, err)
 	}
 	want := map[string]string{"one": "two", "three": "four"}
 	for key := range got {
 		if got[key] != want[key] {
-			t.Errorf("MapParser(%v) = %v, want: %v", slice, got, want)
+			t.Errorf("mapParser(%v) = %v, want: %v", slice, got, want)
 		}
 	}
 }
 
 func TestParamsParser(t *testing.T) {
 	slice := []string{}
-	if _, _, err := ParamsParser(slice); err != keyNotSpecifiedErr {
+	if _, _, err := paramsParser(slice); err != keyNotSpecifiedErr {
 		t.Errorf("empty slice %v should not be allowed", slice)
 	}
 
 	slice = []string{"key"}
-	key, val, err := ParamsParser(slice)
+	key, val, err := paramsParser(slice)
 	if err != nil {
-		t.Errorf("ParamsParser(%v) error: %v", slice, err)
+		t.Errorf("paramsParser(%v) error: %v", slice, err)
 	}
 
 	if key != "key" {
-		t.Errorf("ParamsParser(%v) = %s key, want: 'key'", slice, key)
+		t.Errorf("paramsParser(%v) = %s key, want: 'key'", slice, key)
 	}
 	if len(val) > 0 {
 		t.Errorf("there is no value in the %v slice", slice)
 	}
 
 	slice = []string{"key", "val1", "val2"}
-	key, val, err = ParamsParser(slice)
+	key, val, err = paramsParser(slice)
 	if err != nil {
-		t.Errorf("ParamsParser(%v) error: %v", slice, err)
+		t.Errorf("paramsParser(%v) error: %v", slice, err)
 	}
 	want := fmt.Sprintf("%v", slice[1:])
 	if want != fmt.Sprintf("%v", val) {
-		t.Errorf("ParamsParser(%v) = %v, want: %v", slice, val, want)
+		t.Errorf("paramsParser(%v) = %v, want: %v", slice, val, want)
 	}
 
 }
@@ -77,7 +77,7 @@ func TestSetDataHandler(t *testing.T) {
 		t.Errorf("got '%v', want: '%v'", err, manyArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: ""}
+	dm.hash[key] = &data{value: ""}
 	if _, err := DataHandler(&dm, cmd, []string{key, "hello"}); err != nil {
 		t.Errorf("got '%v', expected 'nil'", err)
 	}
@@ -92,7 +92,7 @@ func TestGetDataHandler(t *testing.T) {
 		t.Errorf("got '%v', want: '%v'", err, manyArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: "hello"}
+	dm.hash[key] = &data{value: "hello"}
 	if _, err := DataHandler(&dm, cmd, []string{key}); err != nil {
 		t.Errorf("got '%v', expected 'nil'", err)
 	}
@@ -106,7 +106,7 @@ func TestLSetDataHandler(t *testing.T) {
 		t.Errorf("got '%v', want '%v'", err, fewArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: []string{}}
+	dm.hash[key] = &data{value: []string{}}
 	if _, err := DataHandler(&dm, cmd, []string{key, "hello", "world"}); err != nil {
 		t.Errorf("got '%v', expected 'nil' error", err)
 	}
@@ -120,7 +120,7 @@ func TestLGetDataHandler(t *testing.T) {
 		t.Errorf("got '%v', expected '%v' error", err, manyArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: []string{"hello", "world"}}
+	dm.hash[key] = &data{value: []string{"hello", "world"}}
 	if _, err := DataHandler(&dm, cmd, []string{key}); err != nil {
 		t.Errorf("got '%v', expected 'nil' error", err)
 	}
@@ -137,7 +137,7 @@ func TestLGetItDataHandler(t *testing.T) {
 		t.Fatalf("got '%v', expected '%v' error for not enough args", err, manyArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: []string{"hello", "world"}}
+	dm.hash[key] = &data{value: []string{"hello", "world"}}
 	have := "world"
 	got, err := DataHandler(&dm, cmd, []string{key, "1"})
 	if err != nil {
@@ -160,7 +160,7 @@ func TestLUpdateDataHandler(t *testing.T) {
 		t.Fatalf("got '%v', expected '%v' error for not enough args", err, manyArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: []string{"hello", "world"}}
+	dm.hash[key] = &data{value: []string{"hello", "world"}}
 	have := "bye"
 	_, err := DataHandler(&dm, cmd, []string{key, "1", have})
 	if err != nil {
@@ -183,7 +183,7 @@ func TestHSetDataHandler(t *testing.T) {
 		t.Errorf("got '%v', want '%v'", err, missValueErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: map[string]string{}}
+	dm.hash[key] = &data{value: map[string]string{}}
 	if _, err := DataHandler(&dm, cmd, []string{key, "key", "value"}); err != nil {
 		t.Errorf("got '%v', expected 'nil' error", err)
 	}
@@ -197,7 +197,7 @@ func TestHGetDataHandler(t *testing.T) {
 		t.Errorf("got '%v', expected '%v' error", err, manyArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: map[string]string{"key": "value"}}
+	dm.hash[key] = &data{value: map[string]string{"key": "value"}}
 	if _, err := DataHandler(&dm, cmd, []string{key}); err != nil {
 		t.Errorf("got '%v', expected 'nil' error", err)
 	}
@@ -214,7 +214,7 @@ func TestHGetValDataHandler(t *testing.T) {
 		t.Errorf("got '%v', want '%v'", err, manyArgsErr)
 	}
 	key := "test"
-	dm.hash[key] = &Data{Value: map[string]string{"key": "value"}}
+	dm.hash[key] = &data{value: map[string]string{"key": "value"}}
 	have := "value"
 	got, err := DataHandler(&dm, cmd, []string{key, "key"})
 	if err != nil {
@@ -237,7 +237,7 @@ func TestHUpdateDataHandler(t *testing.T) {
 	}
 	key := "test"
 	have := "bye"
-	dm.hash[key] = &Data{Value: map[string]string{"hello": "world"}}
+	dm.hash[key] = &data{value: map[string]string{"hello": "world"}}
 	if _, err := DataHandler(&dm, cmd, []string{key, "hello", have}); err != nil {
 		t.Fatalf("got '%v', want 'nil' error for valid case", err)
 	}

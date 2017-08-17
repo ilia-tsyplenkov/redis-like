@@ -12,13 +12,14 @@ var invalidIndexErr = errors.New("ERROR: invalid list index")
 var invalidInnerKeyErr = errors.New("ERROR: invalid inner key")
 
 type DataMap struct {
+	DbId string
 	mu   sync.RWMutex
-	hash map[string]*Data
+	hash map[string]*data
 }
 
 // Init initializes hash map in dm.
 func (dm *DataMap) Init() {
-	dm.hash = make(map[string]*Data)
+	dm.hash = make(map[string]*data)
 }
 
 // Set sets string in dm by key.
@@ -27,7 +28,7 @@ func (dm *DataMap) Set(key, val string) error {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 	if _, ok := dm.hash[key]; !ok {
-		dm.hash[key] = new(Data)
+		dm.hash[key] = new(data)
 	}
 	return dm.hash[key].SSet(val)
 }
@@ -51,7 +52,7 @@ func (dm *DataMap) LSet(key string, val []string) error {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 	if _, ok := dm.hash[key]; !ok {
-		dm.hash[key] = new(Data)
+		dm.hash[key] = new(data)
 	}
 	return dm.hash[key].LSet(val)
 }
@@ -108,7 +109,7 @@ func (dm *DataMap) HSet(key string, val map[string]string) error {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 	if _, ok := dm.hash[key]; !ok {
-		dm.hash[key] = new(Data)
+		dm.hash[key] = new(data)
 	}
 	return dm.hash[key].HSet(val)
 }

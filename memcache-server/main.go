@@ -23,6 +23,7 @@ var launchChecker = make(chan string)
 func init() {
 	var dm server.DataMap
 	dm.Init()
+	dm.DbId = defalutDbIndex
 	globalHash[defalutDbIndex] = &dm
 }
 
@@ -51,7 +52,6 @@ func handleConn(c net.Conn) {
 	fmt.Fprintf(c, "%s", prompt)
 	for input.Scan() {
 		cmd, data, err := server.CommandHandler(input.Text())
-		fmt.Fprintf(c, "CommandHandler cmd: %s, data: %s, data_len: %d, err: %s\n", cmd, data, len(data), err)
 		if err != nil {
 			fmt.Fprintf(c, "%s", prompt)
 			continue
@@ -68,6 +68,7 @@ func handleConn(c net.Conn) {
 					globalHash[id] = &server.DataMap{}
 					dm = globalHash[id]
 					dm.Init()
+					dm.DbId = id
 					launchChecker <- id
 				} else {
 					dm = globalHash[id]
@@ -95,13 +96,13 @@ func ttlChecker(dm *server.DataMap) {
 			}
 			dTTL, err := strconv.Atoi(ttl)
 			if err != nil {
-				log.Printf("Got unhandled ttl: %q for %q key\n", ttl, key)
-				log.Printf("TTL for %q key has been reseted\n", key)
+				log.Printf("db %s: Got unhandled ttl %q for %q key\n", dm.DbId, ttl, key)
+				log.Printf("db %s: TTL for %q key has been reseted\n", dm.DbId, key)
 				dm.Persist(key)
 				continue
 			}
 			if int64(dTTL) < time.Now().UTC().Unix() {
-				log.Printf("%q key has been removed. TTL expired\n", key)
+				log.Printf("db %s: %q key has been removed. TTL expired\n", dm.DbId, key)
 				dm.Remove(key)
 			}
 		}

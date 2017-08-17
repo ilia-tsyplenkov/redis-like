@@ -20,9 +20,9 @@ func dataParser(s string) []string {
 	return r.FindAllString(s, -1)
 }
 
-// MapParser creates map from slice.
+// mapParser creates map from slice.
 // Returns non nil error if slice contains not enough items.
-func MapParser(sl []string) (map[string]string, error) {
+func mapParser(sl []string) (map[string]string, error) {
 	if len(sl) < 2 {
 		return nil, fewArgsErr
 	}
@@ -36,9 +36,9 @@ func MapParser(sl []string) (map[string]string, error) {
 	return res, nil
 }
 
-// ParamsParser split sl slice to key and value.
+// paramsParser split sl slice to key and value.
 // Returns non nil error if sl contains not enough items
-func ParamsParser(sl []string) (key string, value []string, err error) {
+func paramsParser(sl []string) (key string, value []string, err error) {
 	if len(sl) == 0 {
 		err = keyNotSpecifiedErr
 		return key, value, err
@@ -61,7 +61,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 	case "keys":
 		return fmt.Sprintf("%v", dm.Keys()), nil
 	}
-	key, data, err := ParamsParser(s)
+	key, data, err := paramsParser(s)
 	if err != nil {
 		return "", err
 	}
@@ -145,7 +145,7 @@ func DataHandler(dm *DataMap, cmd string, s []string) (string, error) {
 		}
 		return "OK", nil
 	case "hset":
-		dict, err := MapParser(data)
+		dict, err := mapParser(data)
 		if err != nil {
 			return "", err
 		}
